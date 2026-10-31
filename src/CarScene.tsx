@@ -3,7 +3,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Suspense, useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 
-export type CameraView = 'front' | 'side' | 'rear' | 'interior'
+export type CameraView = 'free' | 'front' | 'side' | 'rear' | 'interior'
 
 type AnimationRequest = { name: string; id: number }
 
@@ -14,6 +14,10 @@ type SceneProps = {
 }
 
 const MODEL_URL = '/assets/cupra-terramar.glb'
+
+// This GLB was authored with its wheel bottoms below the scene origin. Lift it
+// above the studio floor so tyres are not visually clipped by the ground plane.
+const CAR_FLOOR_OFFSET = 0.42
 
 const CAMERA_PRESETS: Record<CameraView, { position: [number, number, number]; target: [number, number, number] }> = {
   front: { position: [7.2, 2.5, 7.2], target: [0, 0.8, 0] },
@@ -32,15 +36,40 @@ function CameraController({ view }: { view: CameraView }) {
   const { camera } = useThree()
   const desired = useMemo(() => new THREE.Vector3(), [])
   const desiredTarget = useMemo(() => new THREE.Vector3(), [])
+  const previousView = useRef<CameraView>(view)
+  const restoringFreeView = useRef(false)
+  const freePosition = useRef(camera.position.clone())
+  const freeTarget = useRef(new THREE.Vector3(...CAMERA_PRESETS.front.target))
+
+  useEffect(() => {
+    // Store the user's current manoeuvred position before a preset takes over.
+    if (previousView.current === 'free' && view !== 'free') {
+      freePosition.current.copy(camera.position)
+      freeTarget.current.copy(controls.current?.target ?? new THREE.Vector3())
+    }
+    restoringFreeView.current = view === 'free' && previousView.current !== 'free'
+    previousView.current = view
+  }, [camera, view])
 
   useFrame((_, delta) => {
-    const preset = CAMERA_PRESETS[view]
-    desired.set(...preset.position)
-    desiredTarget.set(...preset.target)
+    if (view === 'free') {
+      if (!restoringFreeView.current) return
+      desired.copy(freePosition.current)
+      desiredTarget.copy(freeTarget.current)
+    } else {
+      const preset = CAMERA_PRESETS[view]
+      desired.set(...preset.position)
+      desiredTarget.set(...preset.target)
+    }
+
     const speed = 1 - Math.exp(-delta * 3.4)
     camera.position.lerp(desired, speed)
     controls.current?.target.lerp(desiredTarget, speed)
     controls.current?.update()
+
+    if (view === 'free' && camera.position.distanceTo(desired) < 0.015 && controls.current?.target.distanceTo(desiredTarget) < 0.015) {
+      restoringFreeView.current = false
+    }
   })
 
   return (
@@ -49,8 +78,9 @@ function CameraController({ view }: { view: CameraView }) {
       enablePan={false}
       minDistance={3.2}
       maxDistance={14}
-      minPolarAngle={0.35}
-      maxPolarAngle={Math.PI / 2.05}
+      minPolarAngle={0.05}
+      // A polar angle beyond 90 degrees would take the camera under the studio floor.
+      maxPolarAngle={Math.PI / 2 - 0.08}
       enableDamping
       dampingFactor={0.07}
       target={CAMERA_PRESETS.front.target}
@@ -137,7 +167,7 @@ export default function CarScene({ color, view, animationRequest }: SceneProps) 
       <directionalLight intensity={2.3} position={[-6, 3, 5]} color="#dfeaff" />
       <directionalLight intensity={1.7} position={[-4, 3, -5]} color="#f2e0dd" />
       <Suspense fallback={<Loader />}>
-        <group position={[0, -0.1, 0]}>
+        <group position={[0, CAR_FLOOR_OFFSET, 0]}>
           <CupraModel color={color} animationRequest={animationRequest} />
         </group>
       </Suspense>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import CarScene, { CameraView } from './CarScene'
 
 const PAINTS = [
@@ -20,11 +20,38 @@ const ANIMATIONS = [
 
 export default function App() {
   const [color, setColor] = useState(PAINTS[0].value)
-  const [view, setView] = useState<CameraView>('front')
+  const [view, setView] = useState<CameraView>('free')
   const [panelOpen, setPanelOpen] = useState(true)
+  const [viewControlsVisible, setViewControlsVisible] = useState(true)
   const [animationRequest, setAnimationRequest] = useState<{ name: string; id: number } | null>(null)
+  const hideViewsTimer = useRef<number | null>(null)
 
   const play = (name: string) => setAnimationRequest({ name, id: Date.now() })
+
+  const clearViewTimer = () => {
+    if (hideViewsTimer.current !== null) window.clearTimeout(hideViewsTimer.current)
+  }
+
+  const showViewControls = () => {
+    clearViewTimer()
+    setViewControlsVisible(true)
+  }
+
+  const hideViewControlsSoon = () => {
+    clearViewTimer()
+    hideViewsTimer.current = window.setTimeout(() => setViewControlsVisible(false), 2400)
+  }
+
+  useEffect(() => {
+    hideViewControlsSoon()
+    return clearViewTimer
+  }, [])
+
+  const chooseView = (nextView: Exclude<CameraView, 'free'>) => {
+    // Clicking the active preset is a deselect: it returns to the saved free-orbit pose.
+    setView((currentView) => currentView === nextView ? 'free' : nextView)
+    hideViewControlsSoon()
+  }
 
   const downloadImage = () => {
     const canvas = document.querySelector<HTMLCanvasElement>('.car-canvas')
@@ -47,9 +74,24 @@ export default function App() {
         <button className="outline-button" onClick={downloadImage}>Download image</button>
       </header>
 
-      <nav className="view-switcher" aria-label="Camera views">
-        {(['front', 'side', 'rear', 'interior'] as CameraView[]).map((item) => (
-          <button key={item} className={view === item ? 'active' : ''} onClick={() => setView(item)}>
+      <button className={`view-peek ${viewControlsVisible ? 'hidden' : ''}`} onClick={showViewControls} aria-label="Show camera views">
+        Views
+      </button>
+      <nav
+        className={`view-switcher ${viewControlsVisible ? 'visible' : ''}`}
+        aria-label="Camera views"
+        onMouseEnter={showViewControls}
+        onMouseLeave={hideViewControlsSoon}
+        onFocus={showViewControls}
+        onBlur={hideViewControlsSoon}
+      >
+        {(['front', 'side', 'rear', 'interior'] as Exclude<CameraView, 'free'>[]).map((item) => (
+          <button
+            key={item}
+            className={view === item ? 'active' : ''}
+            onClick={() => chooseView(item)}
+            title={view === item ? 'Return to free view' : `Show ${item} view`}
+          >
             {item}
           </button>
         ))}
