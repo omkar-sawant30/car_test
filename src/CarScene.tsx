@@ -1,4 +1,4 @@
-import { ContactShadows, Html, OrbitControls, useAnimations, useGLTF, useProgress } from '@react-three/drei'
+import { ContactShadows, Environment, Html, Lightformer, OrbitControls, useAnimations, useGLTF, useProgress } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Suspense, useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
@@ -99,6 +99,8 @@ function CupraModel({ color, animationRequest }: Pick<SceneProps, 'color' | 'ani
 
     scene.traverse((object) => {
       if (!(object instanceof THREE.Mesh)) return
+      object.castShadow = true
+      object.receiveShadow = true
 
       // The source model reuses paint materials inside the cabin. We only clone
       // the exterior body, doors, tailgate, and roof so interior surfaces stay intact.
@@ -113,8 +115,6 @@ function CupraModel({ color, animationRequest }: Pick<SceneProps, 'color' | 'ani
         return paint
       })
       object.material = Array.isArray(object.material) ? mapped : mapped[0]
-      object.castShadow = true
-      object.receiveShadow = true
     })
 
     paintMaterials.current = configured
@@ -157,18 +157,26 @@ export default function CarScene({ color, view, animationRequest, onCanvasReady 
   return (
     <Canvas
       className="car-canvas"
-      shadows
+      shadows="soft"
       dpr={[1, 1.75]}
       camera={{ position: CAMERA_PRESETS.front.position, fov: 33 }}
-      gl={{ antialias: true, preserveDrawingBuffer: true, toneMapping: THREE.ACESFilmicToneMapping }}
+      gl={{ antialias: true, preserveDrawingBuffer: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.15 }}
       onCreated={({ gl }) => onCanvasReady?.(gl.domElement)}
     >
-      <color attach="background" args={['#1c222b']} />
-      <fog attach="fog" args={['#1c222b', 14, 32]} />
-      <hemisphereLight intensity={0.7} groundColor="#11151c" color="#b8c5d7" />
-      <spotLight castShadow intensity={6.5} position={[4.5, 8, 5]} angle={0.55} penumbra={0.95} decay={1.4} shadow-mapSize={[2048, 2048]} />
-      <spotLight intensity={3.2} position={[-6, 4.5, 1]} color="#8eabc8" angle={0.7} penumbra={1} decay={1.3} />
-      <spotLight intensity={2.8} position={[-3, 2.5, -6]} color="#4e6786" angle={0.75} penumbra={1} decay={1.4} />
+      <color attach="background" args={['#2d3642']} />
+      <fog attach="fog" args={['#2d3642', 13, 30]} />
+
+      {/* Reflection cards create the broad paint and glass highlights of a studio shoot. */}
+      <Environment resolution={256}>
+        <Lightformer form="rect" intensity={5} color="#eaf2ff" position={[4, 6, 4]} rotation={[Math.PI / 2.8, 0.6, 0]} scale={[7, 4, 1]} />
+        <Lightformer form="rect" intensity={3} color="#b9d3f2" position={[-5, 3, 2]} rotation={[Math.PI / 2.7, -0.9, 0]} scale={[5, 3, 1]} />
+        <Lightformer form="rect" intensity={2} color="#7589a3" position={[0, 4, -6]} rotation={[Math.PI / 2.5, Math.PI, 0]} scale={[9, 3, 1]} />
+      </Environment>
+
+      <ambientLight intensity={0.16} color="#b9c9df" />
+      <spotLight castShadow position={[-5.5, 8, 4]} intensity={8} angle={0.62} penumbra={0.95} decay={1.5} shadow-mapSize={[2048, 2048]} />
+      <spotLight position={[5, 5, -6]} intensity={4} color="#9dbde2" angle={0.72} penumbra={1} decay={1.5} />
+      <spotLight position={[-7, 2.5, -1]} intensity={2.2} color="#8ba1ba" angle={0.8} penumbra={1} decay={1.5} />
       <Suspense fallback={<Loader />}>
         <group position={[0, CAR_FLOOR_OFFSET, 0]}>
           <CupraModel color={color} animationRequest={animationRequest} />
@@ -176,9 +184,9 @@ export default function CarScene({ color, view, animationRequest, onCanvasReady 
       </Suspense>
       <mesh receiveShadow rotation-x={-Math.PI / 2} position={[0, -0.03, 0]}>
         <planeGeometry args={[200, 200]} />
-        <meshStandardMaterial color="#242c37" roughness={0.74} metalness={0.08} />
+        <meshStandardMaterial color="#2a3440" roughness={0.72} metalness={0.08} />
       </mesh>
-      <ContactShadows position={[0, -0.018, 0]} opacity={0.78} scale={13} blur={2.1} far={8} />
+      <ContactShadows position={[0, -0.02, 0]} opacity={0.82} scale={14} blur={2} far={8} />
       <CameraController view={view} />
     </Canvas>
   )
