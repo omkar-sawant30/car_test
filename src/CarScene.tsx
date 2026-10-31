@@ -1,4 +1,4 @@
-import { ContactShadows, Environment, Html, Lightformer, OrbitControls, useAnimations, useGLTF, useProgress } from '@react-three/drei'
+import { AdaptiveDpr, ContactShadows, Environment, Html, Lightformer, OrbitControls, useAnimations, useGLTF, useProgress } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Suspense, useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
@@ -12,6 +12,7 @@ type SceneProps = {
   view: CameraView
   animationRequest: AnimationRequest | null
   onCanvasReady?: (canvas: HTMLCanvasElement) => void
+  compact?: boolean
 }
 
 const MODEL_URL = '/assets/cupra-terramar.glb'
@@ -153,14 +154,14 @@ function CupraModel({ color, animationRequest }: Pick<SceneProps, 'color' | 'ani
   return <primitive object={scene} />
 }
 
-export default function CarScene({ color, view, animationRequest, onCanvasReady }: SceneProps) {
+export default function CarScene({ color, view, animationRequest, onCanvasReady, compact = false }: SceneProps) {
   return (
     <Canvas
       className="car-canvas"
       shadows="soft"
-      dpr={[1, 1.75]}
+      dpr={compact ? [1, 1.35] : [1, 1.75]}
       camera={{ position: CAMERA_PRESETS.front.position, fov: 33 }}
-      gl={{ antialias: true, preserveDrawingBuffer: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.28 }}
+      gl={{ antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.28 }}
       onCreated={({ gl }) => onCanvasReady?.(gl.domElement)}
     >
       <color attach="background" args={['#59636f']} />
@@ -188,6 +189,7 @@ export default function CarScene({ color, view, animationRequest, onCanvasReady 
       </mesh>
       <ContactShadows position={[0, -0.02, 0]} opacity={0.68} scale={14} blur={2.3} far={8} />
       <CameraController view={view} />
+      <AdaptiveDpr pixelated />
     </Canvas>
   )
 }

@@ -188,15 +188,20 @@ h2 { font-size: 22px; font-weight: 800; }
 .three-loader { color: #25282c; font-family: 'DM Mono', monospace; font-size: 12px; white-space: nowrap; }
 
 @media (max-width: 700px) {
-  .topbar { padding: 20px; }
-  .outline-button { padding: 0 13px; font-size: 12px; }
+  .topbar { padding: 16px; }
+  h1 { font-size: 28px; }
+  .outline-button { min-height: 40px; padding: 0 13px; font-size: 12px; }
   .view-switcher { top: auto; bottom: 18px; left: 20px; grid-template-columns: repeat(4, 1fr); transform: none; }
   .view-switcher:not(.visible) { transform: translateY(130%); }
   .view-peek { top: auto; bottom: 0; left: 50%; border-radius: 5px 5px 0 0; transform: translateX(-50%); }
-  .view-switcher button { width: 54px; padding: 8px 6px; font-size: 9px; text-align: center; }
-  .config-panel { right: 12px; bottom: 68px; width: min(340px, calc(100vw - 24px)); }
-  .panel-toggle { display: block; }
+  .view-switcher button { width: 58px; min-height: 44px; padding: 8px 6px; font-size: 9px; text-align: center; }
+  .config-panel { right: 12px; bottom: 78px; width: min(360px, calc(100vw - 24px)); max-height: calc(100dvh - 164px); overflow-y: auto; }
+  .panel-toggle { display: block; min-height: 48px; }
   .config-panel:not(.open) .panel-content { display: none; }
+  .panel-content { padding: 19px; }
+  .swatch { width: 32px; height: 32px; }
+  .custom-color { width: 32px; height: 32px; }
+  .animation-grid button { min-height: 44px; font-size: 12px; }
   .hint { display: none; }
   .swatches { flex-wrap: wrap; }
 }

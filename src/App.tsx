@@ -19,9 +19,10 @@ const ANIMATIONS = [
 ] as const
 
 export default function App() {
+  const [compact, setCompact] = useState(() => window.matchMedia('(max-width: 700px)').matches)
   const [color, setColor] = useState(PAINTS[0].value)
   const [view, setView] = useState<CameraView>('free')
-  const [panelOpen, setPanelOpen] = useState(true)
+  const [panelOpen, setPanelOpen] = useState(() => !window.matchMedia('(max-width: 700px)').matches)
   const [viewControlsVisible, setViewControlsVisible] = useState(true)
   const [animationRequest, setAnimationRequest] = useState<{ name: string; id: number } | null>(null)
   const [imageMessage, setImageMessage] = useState('')
@@ -47,6 +48,13 @@ export default function App() {
   useEffect(() => {
     hideViewControlsSoon()
     return clearViewTimer
+  }, [])
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 700px)')
+    const updateCompactMode = () => setCompact(media.matches)
+    media.addEventListener('change', updateCompactMode)
+    return () => media.removeEventListener('change', updateCompactMode)
   }, [])
 
   const chooseView = (nextView: Exclude<CameraView, 'free'>) => {
@@ -88,7 +96,7 @@ export default function App() {
 
   return (
     <main>
-      <CarScene color={color} view={view} animationRequest={animationRequest} onCanvasReady={(canvas) => { canvasRef.current = canvas }} />
+      <CarScene color={color} view={view} animationRequest={animationRequest} compact={compact} onCanvasReady={(canvas) => { canvasRef.current = canvas }} />
 
       <header className="topbar">
         <div>
@@ -160,7 +168,7 @@ export default function App() {
         </div>
       </section>
 
-      <p className="hint">Drag to rotate · Scroll to zoom</p>
+      <p className="hint">{compact ? 'Drag to rotate · Pinch to zoom' : 'Drag to rotate · Scroll to zoom'}</p>
     </main>
   )
 }
