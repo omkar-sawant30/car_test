@@ -18,7 +18,7 @@ const MODEL_URL = '/assets/cupra-terramar.glb'
 
 // This GLB was authored with its wheel bottoms below the scene origin. Lift it
 // above the studio floor so tyres are not visually clipped by the ground plane.
-const CAR_FLOOR_OFFSET = 0.11
+const CAR_FLOOR_OFFSET = 0.09
 
 const CAMERA_PRESETS: Record<Exclude<CameraView, 'free'>, { position: [number, number, number]; target: [number, number, number] }> = {
   front: { position: [7.2, 2.5, 7.2], target: [0, 0.8, 0] },
@@ -173,7 +173,7 @@ export default function CarScene({ color, view, animationRequest, onCanvasReady 
         <Lightformer form="rect" intensity={2} color="#7589a3" position={[0, 4, -6]} rotation={[Math.PI / 2.5, Math.PI, 0]} scale={[9, 3, 1]} />
       </Environment>
 
-      <ambientLight intensity={0.16} color="#b9c9df" />
+      <ambientLight intensity={0.34} color="#b9c9df" />
       <spotLight castShadow position={[-5.5, 8, 4]} intensity={8} angle={0.62} penumbra={0.95} decay={1.5} shadow-mapSize={[2048, 2048]} />
       <spotLight position={[5, 5, -6]} intensity={4} color="#9dbde2" angle={0.72} penumbra={1} decay={1.5} />
       <spotLight position={[-7, 2.5, -1]} intensity={2.2} color="#8ba1ba" angle={0.8} penumbra={1} decay={1.5} />
