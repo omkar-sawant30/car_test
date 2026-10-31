@@ -18,7 +18,7 @@ const MODEL_URL = '/assets/cupra-terramar.glb'
 
 // This GLB was authored with its wheel bottoms below the scene origin. Lift it
 // above the studio floor so tyres are not visually clipped by the ground plane.
-const CAR_FLOOR_OFFSET = 0.35
+const CAR_FLOOR_OFFSET = 0.25
 
 const CAMERA_PRESETS: Record<Exclude<CameraView, 'free'>, { position: [number, number, number]; target: [number, number, number] }> = {
   front: { position: [7.2, 2.5, 7.2], target: [0, 0.8, 0] },
