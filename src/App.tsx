@@ -24,7 +24,9 @@ export default function App() {
   const [panelOpen, setPanelOpen] = useState(true)
   const [viewControlsVisible, setViewControlsVisible] = useState(true)
   const [animationRequest, setAnimationRequest] = useState<{ name: string; id: number } | null>(null)
+  const [imageMessage, setImageMessage] = useState('')
   const hideViewsTimer = useRef<number | null>(null)
+  const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
   const play = (name: string) => setAnimationRequest({ name, id: Date.now() })
 
@@ -53,32 +55,57 @@ export default function App() {
     hideViewControlsSoon()
   }
 
-  const downloadImage = () => {
-    const canvas = document.querySelector<HTMLCanvasElement>('.car-canvas')
-    if (!canvas) return
-    const link = document.createElement('a')
-    link.download = `terramar-${color.slice(1)}.png`
-    link.href = canvas.toDataURL('image/png')
-    link.click()
+  const shareImage = async () => {
+    const canvas = canvasRef.current
+    if (!canvas) {
+      setImageMessage('Scene is still loading')
+      return
+    }
+
+    const imageBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'))
+    if (!imageBlob) {
+      setImageMessage('Could not create image')
+      return
+    }
+
+    const file = new File([imageBlob], `terramar-${color.slice(1)}.png`, { type: 'image/png' })
+    try {
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ title: 'Terramar configuration', files: [file] })
+        setImageMessage('Image shared')
+      } else {
+        const link = document.createElement('a')
+        link.download = file.name
+        link.href = URL.createObjectURL(imageBlob)
+        link.click()
+        window.setTimeout(() => URL.revokeObjectURL(link.href), 0)
+        setImageMessage('Image downloaded')
+      }
+    } catch (error) {
+      if ((error as DOMException).name !== 'AbortError') setImageMessage('Share unavailable')
+    }
   }
 
   return (
     <main>
-      <CarScene color={color} view={view} animationRequest={animationRequest} />
+      <CarScene color={color} view={view} animationRequest={animationRequest} onCanvasReady={(canvas) => { canvasRef.current = canvas }} />
 
       <header className="topbar">
         <div>
           <p className="eyebrow">UNOFFICIAL VISUAL CONFIGURATOR</p>
           <h1>TERRAMAR</h1>
         </div>
-        <button className="outline-button" onClick={downloadImage}>Download image</button>
+        <div className="share-area">
+          <button className="outline-button" onClick={shareImage}>Share image</button>
+          {imageMessage && <span>{imageMessage}</span>}
+        </div>
       </header>
 
       <button className={`view-peek ${viewControlsVisible ? 'hidden' : ''}`} onClick={showViewControls} aria-label="Show camera views">
         Views
       </button>
       <nav
-        className={`view-switcher ${viewControlsVisible ? 'visible' : ''}`}
+        className={`view-switcher ${viewControlsVisible || view !== 'free' ? 'visible' : ''}`}
         aria-label="Camera views"
         onMouseEnter={showViewControls}
         onMouseLeave={hideViewControlsSoon}

@@ -11,13 +11,14 @@ type SceneProps = {
   color: string
   view: CameraView
   animationRequest: AnimationRequest | null
+  onCanvasReady?: (canvas: HTMLCanvasElement) => void
 }
 
 const MODEL_URL = '/assets/cupra-terramar.glb'
 
 // This GLB was authored with its wheel bottoms below the scene origin. Lift it
 // above the studio floor so tyres are not visually clipped by the ground plane.
-const CAR_FLOOR_OFFSET = 0.42
+const CAR_FLOOR_OFFSET = 0.19
 
 const CAMERA_PRESETS: Record<Exclude<CameraView, 'free'>, { position: [number, number, number]; target: [number, number, number] }> = {
   front: { position: [7.2, 2.5, 7.2], target: [0, 0.8, 0] },
@@ -41,17 +42,17 @@ function CameraController({ view }: { view: CameraView }) {
   const freePosition = useRef(camera.position.clone())
   const freeTarget = useRef(new THREE.Vector3(...CAMERA_PRESETS.front.target))
 
-  useEffect(() => {
-    // Store the user's current manoeuvred position before a preset takes over.
-    if (previousView.current === 'free' && view !== 'free') {
-      freePosition.current.copy(camera.position)
-      freeTarget.current.copy(controls.current?.target ?? new THREE.Vector3())
-    }
-    restoringFreeView.current = view === 'free' && previousView.current !== 'free'
-    previousView.current = view
-  }, [camera, view])
-
   useFrame((_, delta) => {
+    // Save the exact free-orbit position before a view preset starts moving.
+    if (previousView.current !== view) {
+      if (previousView.current === 'free' && view !== 'free') {
+        freePosition.current.copy(camera.position)
+        freeTarget.current.copy(controls.current?.target ?? new THREE.Vector3())
+      }
+      restoringFreeView.current = view === 'free' && previousView.current !== 'free'
+      previousView.current = view
+    }
+
     if (view === 'free') {
       if (!restoringFreeView.current) return
       desired.copy(freePosition.current)
@@ -152,7 +153,7 @@ function CupraModel({ color, animationRequest }: Pick<SceneProps, 'color' | 'ani
   return <primitive object={scene} />
 }
 
-export default function CarScene({ color, view, animationRequest }: SceneProps) {
+export default function CarScene({ color, view, animationRequest, onCanvasReady }: SceneProps) {
   return (
     <Canvas
       className="car-canvas"
@@ -160,12 +161,14 @@ export default function CarScene({ color, view, animationRequest }: SceneProps) 
       dpr={[1, 1.75]}
       camera={{ position: CAMERA_PRESETS.front.position, fov: 33 }}
       gl={{ antialias: true, preserveDrawingBuffer: true, toneMapping: THREE.ACESFilmicToneMapping }}
+      onCreated={({ gl }) => onCanvasReady?.(gl.domElement)}
     >
-      <color attach="background" args={['#e9eaeb']} />
-      <hemisphereLight intensity={1.55} groundColor="#60636a" color="#ffffff" />
-      <directionalLight castShadow intensity={3.8} position={[5, 8, 4]} shadow-mapSize={[2048, 2048]} />
-      <directionalLight intensity={2.3} position={[-6, 3, 5]} color="#dfeaff" />
-      <directionalLight intensity={1.7} position={[-4, 3, -5]} color="#f2e0dd" />
+      <color attach="background" args={['#1c222b']} />
+      <fog attach="fog" args={['#1c222b', 14, 32]} />
+      <hemisphereLight intensity={0.7} groundColor="#11151c" color="#b8c5d7" />
+      <spotLight castShadow intensity={6.5} position={[4.5, 8, 5]} angle={0.55} penumbra={0.95} decay={1.4} shadow-mapSize={[2048, 2048]} />
+      <spotLight intensity={3.2} position={[-6, 4.5, 1]} color="#8eabc8" angle={0.7} penumbra={1} decay={1.3} />
+      <spotLight intensity={2.8} position={[-3, 2.5, -6]} color="#4e6786" angle={0.75} penumbra={1} decay={1.4} />
       <Suspense fallback={<Loader />}>
         <group position={[0, CAR_FLOOR_OFFSET, 0]}>
           <CupraModel color={color} animationRequest={animationRequest} />
@@ -173,9 +176,9 @@ export default function CarScene({ color, view, animationRequest }: SceneProps) 
       </Suspense>
       <mesh receiveShadow rotation-x={-Math.PI / 2} position={[0, -0.03, 0]}>
         <planeGeometry args={[200, 200]} />
-        <meshStandardMaterial color="#d5d7da" roughness={0.76} metalness={0.04} />
+        <meshStandardMaterial color="#242c37" roughness={0.74} metalness={0.08} />
       </mesh>
-      <ContactShadows position={[0, -0.015, 0]} opacity={0.5} scale={13} blur={2.8} far={8} />
+      <ContactShadows position={[0, -0.018, 0]} opacity={0.78} scale={13} blur={2.1} far={8} />
       <CameraController view={view} />
     </Canvas>
   )
