@@ -18,7 +18,7 @@ const MODEL_URL = '/assets/cupra-terramar.glb'
 
 // This GLB was authored with its wheel bottoms below the scene origin. Lift it
 // above the studio floor so tyres are not visually clipped by the ground plane.
-const CAR_FLOOR_OFFSET = 0.09
+const CAR_FLOOR_OFFSET = 0.03
 
 const CAMERA_PRESETS: Record<Exclude<CameraView, 'free'>, { position: [number, number, number]; target: [number, number, number] }> = {
   front: { position: [7.2, 2.5, 7.2], target: [0, 0.8, 0] },
@@ -163,7 +163,7 @@ export default function CarScene({ color, view, animationRequest, onCanvasReady 
       gl={{ antialias: true, preserveDrawingBuffer: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.15 }}
       onCreated={({ gl }) => onCanvasReady?.(gl.domElement)}
     >
-      <color attach="background" args={['#2d3642']} />
+      <color attach="background" args={['#575d66']} />
       <fog attach="fog" args={['#2d3642', 13, 30]} />
 
       {/* Reflection cards create the broad paint and glass highlights of a studio shoot. */}
