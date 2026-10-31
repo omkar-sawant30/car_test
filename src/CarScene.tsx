@@ -18,7 +18,7 @@ const MODEL_URL = '/assets/cupra-terramar.glb'
 
 // This GLB was authored with its wheel bottoms below the scene origin. Lift it
 // above the studio floor so tyres are not visually clipped by the ground plane.
-const CAR_FLOOR_OFFSET = 0.11
+const CAR_FLOOR_OFFSET = 0.35
 
 const CAMERA_PRESETS: Record<Exclude<CameraView, 'free'>, { position: [number, number, number]; target: [number, number, number] }> = {
   front: { position: [7.2, 2.5, 7.2], target: [0, 0.8, 0] },
@@ -160,23 +160,23 @@ export default function CarScene({ color, view, animationRequest, onCanvasReady 
       shadows="soft"
       dpr={[1, 1.75]}
       camera={{ position: CAMERA_PRESETS.front.position, fov: 33 }}
-      gl={{ antialias: true, preserveDrawingBuffer: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.15 }}
+      gl={{ antialias: true, preserveDrawingBuffer: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.28 }}
       onCreated={({ gl }) => onCanvasReady?.(gl.domElement)}
     >
-      <color attach="background" args={['#2d3642']} />
-      <fog attach="fog" args={['#2d3642', 13, 30]} />
+      <color attach="background" args={['#59636f']} />
+      <fog attach="fog" args={['#59636f', 17, 36]} />
 
       {/* Reflection cards create the broad paint and glass highlights of a studio shoot. */}
       <Environment resolution={256}>
-        <Lightformer form="rect" intensity={5} color="#eaf2ff" position={[4, 6, 4]} rotation={[Math.PI / 2.8, 0.6, 0]} scale={[7, 4, 1]} />
-        <Lightformer form="rect" intensity={3} color="#b9d3f2" position={[-5, 3, 2]} rotation={[Math.PI / 2.7, -0.9, 0]} scale={[5, 3, 1]} />
-        <Lightformer form="rect" intensity={2} color="#7589a3" position={[0, 4, -6]} rotation={[Math.PI / 2.5, Math.PI, 0]} scale={[9, 3, 1]} />
+        <Lightformer form="rect" intensity={7} color="#f5f8ff" position={[4, 6, 4]} rotation={[Math.PI / 2.8, 0.6, 0]} scale={[7, 4, 1]} />
+        <Lightformer form="rect" intensity={4} color="#cfe3f7" position={[-5, 3, 2]} rotation={[Math.PI / 2.7, -0.9, 0]} scale={[5, 3, 1]} />
+        <Lightformer form="rect" intensity={3} color="#a9b9c9" position={[0, 4, -6]} rotation={[Math.PI / 2.5, Math.PI, 0]} scale={[9, 3, 1]} />
       </Environment>
 
-      <ambientLight intensity={0.16} color="#b9c9df" />
-      <spotLight castShadow position={[-5.5, 8, 4]} intensity={8} angle={0.62} penumbra={0.95} decay={1.5} shadow-mapSize={[2048, 2048]} />
-      <spotLight position={[5, 5, -6]} intensity={4} color="#9dbde2" angle={0.72} penumbra={1} decay={1.5} />
-      <spotLight position={[-7, 2.5, -1]} intensity={2.2} color="#8ba1ba" angle={0.8} penumbra={1} decay={1.5} />
+      <hemisphereLight intensity={1.15} groundColor="#29323d" color="#edf4ff" />
+      <directionalLight castShadow position={[-5.5, 8, 4]} intensity={4.8} color="#fff8f2" shadow-mapSize={[2048, 2048]} />
+      <directionalLight position={[6, 4.5, -5]} intensity={2.5} color="#c8ddff" />
+      <directionalLight position={[-4, 2, -5]} intensity={1.4} color="#a8bed6" />
       <Suspense fallback={<Loader />}>
         <group position={[0, CAR_FLOOR_OFFSET, 0]}>
           <CupraModel color={color} animationRequest={animationRequest} />
@@ -184,9 +184,9 @@ export default function CarScene({ color, view, animationRequest, onCanvasReady 
       </Suspense>
       <mesh receiveShadow rotation-x={-Math.PI / 2} position={[0, -0.03, 0]}>
         <planeGeometry args={[200, 200]} />
-        <meshStandardMaterial color="#2a3440" roughness={0.72} metalness={0.08} />
+        <meshStandardMaterial color="#48535f" roughness={0.74} metalness={0.05} />
       </mesh>
-      <ContactShadows position={[0, -0.02, 0]} opacity={0.82} scale={14} blur={2} far={8} />
+      <ContactShadows position={[0, -0.02, 0]} opacity={0.68} scale={14} blur={2.3} far={8} />
       <CameraController view={view} />
     </Canvas>
   )
