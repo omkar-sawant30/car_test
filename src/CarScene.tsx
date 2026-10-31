@@ -5,7 +5,7 @@ import * as THREE from 'three'
 
 export type CameraView = 'free' | 'front' | 'side' | 'rear' | 'interior'
 
-type AnimationRequest = { name: string; id: number }
+type AnimationRequest = { name: string; mode: 'open' | 'close' | 'reset'; id: number }
 
 type SceneProps = {
   color: string
@@ -137,7 +137,7 @@ function CupraModel({ color, animationRequest }: Pick<SceneProps, 'color' | 'ani
 
   useEffect(() => {
     if (!animationRequest) return
-    if (animationRequest.name === 'RESET') {
+    if (animationRequest.mode === 'reset') {
       Object.values(actions).forEach((action) => {
         action?.stop()
         action?.reset()
@@ -147,8 +147,16 @@ function CupraModel({ color, animationRequest }: Pick<SceneProps, 'color' | 'ani
 
     const action = actions[animationRequest.name]
     if (!action) return
-    action.reset().setLoop(THREE.LoopOnce, 1).play()
+    action.stop()
+    action.reset().setLoop(THREE.LoopOnce, 1)
     action.clampWhenFinished = true
+    if (animationRequest.mode === 'close') {
+      action.timeScale = -1
+      action.time = action.getClip().duration
+    } else {
+      action.timeScale = 1
+    }
+    action.play()
   }, [actions, animationRequest])
 
   return <primitive object={scene} />

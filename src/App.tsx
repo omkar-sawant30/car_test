@@ -23,13 +23,24 @@ export default function App() {
   const [color, setColor] = useState(PAINTS[0].value)
   const [view, setView] = useState<CameraView>('free')
   const [panelOpen, setPanelOpen] = useState(() => !window.matchMedia('(max-width: 700px)').matches)
+  const [configVisible, setConfigVisible] = useState(true)
   const [viewControlsVisible, setViewControlsVisible] = useState(true)
-  const [animationRequest, setAnimationRequest] = useState<{ name: string; id: number } | null>(null)
+  const [animationRequest, setAnimationRequest] = useState<{ name: string; mode: 'open' | 'close' | 'reset'; id: number } | null>(null)
+  const [openPanels, setOpenPanels] = useState<string[]>([])
   const [imageMessage, setImageMessage] = useState('')
   const hideViewsTimer = useRef<number | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
-  const play = (name: string) => setAnimationRequest({ name, id: Date.now() })
+  const togglePanelAnimation = (name: string) => {
+    const isOpen = openPanels.includes(name)
+    setAnimationRequest({ name, mode: isOpen ? 'close' : 'open', id: Date.now() })
+    setOpenPanels((current) => isOpen ? current.filter((panel) => panel !== name) : [...current, name])
+  }
+
+  const resetPanels = () => {
+    setAnimationRequest({ name: 'RESET', mode: 'reset', id: Date.now() })
+    setOpenPanels([])
+  }
 
   const clearViewTimer = () => {
     if (hideViewsTimer.current !== null) window.clearTimeout(hideViewsTimer.current)
@@ -43,6 +54,11 @@ export default function App() {
   const hideViewControlsSoon = () => {
     clearViewTimer()
     hideViewsTimer.current = window.setTimeout(() => setViewControlsVisible(false), 2400)
+  }
+
+  const hideViewControls = () => {
+    clearViewTimer()
+    setViewControlsVisible(false)
   }
 
   useEffect(() => {
@@ -113,7 +129,7 @@ export default function App() {
         Views
       </button>
       <nav
-        className={`view-switcher ${viewControlsVisible || view !== 'free' ? 'visible' : ''}`}
+        className={`view-switcher ${viewControlsVisible ? 'visible' : ''}`}
         aria-label="Camera views"
         onMouseEnter={showViewControls}
         onMouseLeave={hideViewControlsSoon}
@@ -130,15 +146,22 @@ export default function App() {
             {item}
           </button>
         ))}
+        <button className="views-dismiss" onClick={hideViewControls}>Hide views</button>
       </nav>
 
-      <section className={`config-panel ${panelOpen ? 'open' : ''}`}>
+      <button className={`config-peek ${configVisible ? 'hidden' : ''}`} onClick={() => setConfigVisible(true)}>
+        Configure
+      </button>
+      {configVisible && <section className={`config-panel ${panelOpen ? 'open' : ''}`}>
         <button className="panel-toggle" onClick={() => setPanelOpen((open) => !open)} aria-expanded={panelOpen}>
           {panelOpen ? 'Hide options' : 'Configure'}
         </button>
         <div className="panel-content">
           <div className="panel-heading">
-            <p className="eyebrow">EXTERIOR</p>
+            <div className="panel-title-row">
+              <p className="eyebrow">EXTERIOR</p>
+              <button className="hide-config" onClick={() => setConfigVisible(false)} aria-label="Hide configurator options">Hide</button>
+            </div>
             <h2>Paint finish</h2>
             <span className="color-name">{PAINTS.find((paint) => paint.value === color)?.name ?? 'Custom paint'}</span>
           </div>
@@ -162,11 +185,14 @@ export default function App() {
           <div className="divider" />
           <p className="eyebrow">INTERACTION</p>
           <div className="animation-grid">
-            {ANIMATIONS.map(([name, label]) => <button key={name} onClick={() => play(name)}>{label}</button>)}
-            <button className="reset-button" onClick={() => play('RESET')}>Reset panels</button>
+            {ANIMATIONS.map(([name, label]) => {
+              const isOpen = openPanels.includes(name)
+              return <button key={name} className={isOpen ? 'active' : ''} onClick={() => togglePanelAnimation(name)}>{isOpen ? label.replace('Open', 'Close') : label}</button>
+            })}
+            <button className="reset-button" onClick={resetPanels}>Reset panels</button>
           </div>
         </div>
-      </section>
+      </section>}
 
       <p className="hint">{compact ? 'Drag to rotate · Pinch to zoom' : 'Drag to rotate · Scroll to zoom'}</p>
     </main>

@@ -99,6 +99,14 @@ h2 { font-size: 22px; font-weight: 800; }
   transition: background .18s, color .18s;
 }
 .view-switcher button:hover, .view-switcher button.active { color: #fff; background: #7850a5; }
+.view-switcher .views-dismiss {
+  margin-top: 5px;
+  border: 1px solid rgba(208, 220, 235, .4);
+  color: #cdd7e4;
+  background: transparent;
+  text-align: center;
+}
+.view-switcher .views-dismiss:hover { background: rgba(255,255,255,.12); }
 
 .config-panel {
   position: fixed;
@@ -127,6 +135,19 @@ h2 { font-size: 22px; font-weight: 800; }
 }
 .panel-content { padding: 23px; }
 .panel-heading { display: grid; gap: 1px; }
+.panel-title-row { display: flex; align-items: center; justify-content: space-between; }
+.panel-title-row .eyebrow { margin-bottom: 5px; }
+.hide-config {
+  border: 0;
+  padding: 3px 0;
+  color: #b9c6d5;
+  background: transparent;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.hide-config:hover { color: #fff; }
 .color-name { margin-top: 3px; color: #adb8c5; font-size: 13px; }
 
 .swatches { display: flex; align-items: center; gap: 9px; margin-top: 19px; }
@@ -173,7 +194,25 @@ h2 { font-size: 22px; font-weight: 800; }
   transition: border-color .18s, background .18s;
 }
 .animation-grid button:hover { border-color: #af8adc; background: rgba(143,96,190,.23); }
+.animation-grid button.active { color: #fff; border-color: #bf8ef2; background: #8150aa; }
 .animation-grid .reset-button { color: #fff; border-color: #8154aa; background: #704493; }
+
+.config-peek {
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  z-index: 4;
+  border: 1px solid #8090a2;
+  border-radius: 100px;
+  padding: 12px 17px;
+  color: #f6f7f8;
+  background: rgba(21,27,35,.78);
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity .2s, transform .2s;
+}
+.config-peek:hover { background: #2e3a4a; transform: translateY(-1px); }
+.config-peek.hidden { opacity: 0; pointer-events: none; }
 
 .hint {
   position: fixed;
@@ -195,6 +234,7 @@ h2 { font-size: 22px; font-weight: 800; }
   .view-switcher:not(.visible) { transform: translateY(130%); }
   .view-peek { top: auto; bottom: 0; left: 50%; border-radius: 5px 5px 0 0; transform: translateX(-50%); }
   .view-switcher button { width: 58px; min-height: 44px; padding: 8px 6px; font-size: 9px; text-align: center; }
+  .view-switcher .views-dismiss { grid-column: 1 / -1; min-height: 36px; margin-top: 0; }
   .config-panel { right: 12px; bottom: 78px; width: min(360px, calc(100vw - 24px)); max-height: calc(100dvh - 164px); overflow-y: auto; }
   .panel-toggle { display: block; min-height: 48px; }
   .config-panel:not(.open) .panel-content { display: none; }
@@ -202,6 +242,7 @@ h2 { font-size: 22px; font-weight: 800; }
   .swatch { width: 32px; height: 32px; }
   .custom-color { width: 32px; height: 32px; }
   .animation-grid button { min-height: 44px; font-size: 12px; }
+  .config-peek { right: 12px; bottom: 78px; }
   .hint { display: none; }
   .swatches { flex-wrap: wrap; }
 }
